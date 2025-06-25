@@ -1,0 +1,122 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Clients Needed Calculator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 12px;
+      max-width: 400px;
+      margin: auto;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: 600;
+    }
+    input[type="number"] {
+      width: 100%;
+      padding: 6px;
+      margin-top: 4px;
+      box-sizing: border-box;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px 16px;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #007acc;
+      color: white;
+      border: none;
+      border-radius: 4px;
+    }
+    #result {
+      margin-top: 20px;
+      font-weight: 700;
+      font-size: 18px;
+      color: #333;
+    }
+    .error {
+      color: red;
+      margin-top: 10px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <h2>Clients Needed Calculator</h2>
+  <form id="calculatorForm">
+    <label for="incomeGoal">Annual Income Goal ($):</label>
+    <input type="number" id="incomeGoal" min="1" step="any" required />
+
+
+    <label for="avgPrice">Average Service Price ($):</label>
+    <input type="number" id="avgPrice" min="1" step="any" required />
+
+
+    <label for="visitsPerMonth">Average Visits Per Client Per Month:</label>
+    <input type="number" id="visitsPerMonth" min="0.1" step="any" required />
+
+
+    <label for="retentionRate">Retention Rate (0.0 - 1.0):</label>
+    <input type="number" id="retentionRate" min="0.01" max="1" step="0.01" value="1" required />
+
+
+    <button type="submit">Calculate</button>
+    <div id="result"></div>
+    <div id="errorMsg" class="error"></div>
+  </form>
+
+
+  <script>
+    function calculateClientsNeeded({ incomeGoal, averageServicePrice, frequencyPerClientPerMonth, retentionRate, monthsPerYear = 12 }) {
+      if (
+        incomeGoal <= 0 ||
+        averageServicePrice <= 0 ||
+        frequencyPerClientPerMonth <= 0 ||
+        monthsPerYear <= 0 ||
+        retentionRate <= 0 || retentionRate > 1
+      ) {
+        return 'All input values must be greater than 0, and retention rate must be between 0 and 1.';
+      }
+
+
+      const totalSessionsNeeded = incomeGoal / averageServicePrice;
+      const sessionsPerClientPerYear = frequencyPerClientPerMonth * monthsPerYear;
+      const adjustedClientsNeeded = totalSessionsNeeded / (sessionsPerClientPerYear * retentionRate);
+      return Math.ceil(adjustedClientsNeeded);
+    }
+
+
+    document.getElementById('calculatorForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const incomeGoal = parseFloat(document.getElementById('incomeGoal').value);
+      const avgPrice = parseFloat(document.getElementById('avgPrice').value);
+      const visits = parseFloat(document.getElementById('visitsPerMonth').value);
+      const retention = parseFloat(document.getElementById('retentionRate').value);
+      const errorMsg = document.getElementById('errorMsg');
+      const resultDiv = document.getElementById('result');
+
+
+      errorMsg.textContent = '';
+      resultDiv.textContent = '';
+
+
+      const result = calculateClientsNeeded({
+        incomeGoal: incomeGoal,
+        averageServicePrice: avgPrice,
+        frequencyPerClientPerMonth: visits,
+        retentionRate: retention
+      });
+
+
+      if (typeof result === 'string') {
+        errorMsg.textContent = result;
+      } else {
+        resultDiv.textContent = `You need approximately ${result} active clients to meet your income goal.`;
+      }
+    });
+  </script>
+</body>
+</html>
