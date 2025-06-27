@@ -1,0 +1,197 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Client Calculator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 480px;
+      margin: 2rem auto;
+      padding: 1rem;
+      background: #f9f9f9;
+      border-radius: 8px;
+    }
+    label {
+      display: block;
+      margin: 0.5rem 0 0.1rem;
+    }
+    input[type="number"] {
+      width: 100%;
+      padding: 0.4rem;
+      font-size: 1rem;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    button {
+      margin-top: 1rem;
+      padding: 0.6rem 1.2rem;
+      font-size: 1rem;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .result {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: white;
+      border-radius: 5px;
+      box-shadow: 0 0 5px #ccc;
+    }
+  </style>
+</head>
+<body>
+
+
+  <h1>Client & Visit Calculator</h1>
+
+
+  <label for="incomeGoal">Income Goal (per year):</label>
+  <input id="incomeGoal" type="number" min="1" step="100" value="100000" />
+
+
+  <label for="averageServicePrice">Average Service Price ($):</label>
+  <input id="averageServicePrice" type="number" min="1" step="1" value="60" />
+
+
+  <label for="weeksBetweenVisits">Weeks Between Client Visits:</label>
+  <input id="weeksBetweenVisits" type="number" min="1" step="1" value="4" />
+
+
+  <label for="workDaysPerWeek">Work Days Per Week:</label>
+  <input id="workDaysPerWeek" type="number" min="1" max="7" step="1" value="3" />
+
+
+  <p>Assumed Work Weeks Per Year: <strong>52</strong></p>
+
+
+  <button id="calculateBtn">Calculate</button>
+
+
+  <div class="result" id="resultDiv"></div>
+  <div class="result" id="dailyClientsDiv"></div>
+
+
+  <script>
+    function calculateClientsNeeded({
+      incomeGoal,
+      averageServicePrice,
+      weeksBetweenVisits,
+      workDaysPerWeek
+    }) {
+      const workWeeksPerYear = 52; // Hardcode to 52 weeks
+
+
+      // Basic validation for positive inputs
+      if (
+        incomeGoal <= 0 ||
+        averageServicePrice <= 0 ||
+        weeksBetweenVisits <= 0 ||
+        workDaysPerWeek <= 0
+      ) {
+        // Return zeros if any critical input is invalid
+        return {
+          totalClientsNeeded: 0,
+          totalVisitsNeeded: 0,
+          clientsPerDay: 0, // Will be same as visitsPerDay in this context
+          visitsPerDay: 0
+        };
+      }
+
+
+      // 1. Calculate total visits needed per year to reach the income goal
+      const totalVisitsNeeded = incomeGoal / averageServicePrice;
+
+
+      // 2. Calculate how many times a single client visits per year
+      const visitsPerClientPerYear = workWeeksPerYear / weeksBetweenVisits;
+
+
+      // 3. Calculate the total unique clients needed to generate those visits
+      // This is the pool of active clients required.
+      const totalClientsNeeded = totalVisitsNeeded / visitsPerClientPerYear;
+
+
+      // 4. Calculate total working days in the year
+      const totalWorkDaysPerYear = workWeeksPerYear * workDaysPerWeek;
+
+
+      // 5. Calculate average visits per day
+      // This is the number of appointments you need to complete on average each work day.
+      const visitsPerDay = totalVisitsNeeded / totalWorkDaysPerYear;
+
+
+      // For "Clients Per Day", in a recurring service, this often means
+      // the average number of appointments per day, which is the same as visitsPerDay.
+      // If "Clients Per Day" meant *unique* new clients, the calculation would be different
+      // and require more assumptions (e.g., churn rate, new client acquisition rate).
+      // For this calculator, visitsPerDay is the most practical metric for "clients served daily".
+      const clientsPerDay = visitsPerDay; // Using visitsPerDay for average daily clients/appointments
+
+
+      return {
+        totalClientsNeeded: Math.ceil(totalClientsNeeded), // Round up as you can't have a fraction of a client
+        totalVisitsNeeded: Math.ceil(totalVisitsNeeded), // Round up as you need to complete full visits
+        visitsPerDay: visitsPerDay.toFixed(1), // Round to one decimal for display
+        clientsPerDay: clientsPerDay.toFixed(1) // Round to one decimal for display
+      };
+    }
+
+
+    // Get input elements
+    const incomeGoalInput = document.getElementById('incomeGoal');
+    const averageServicePriceInput = document.getElementById('averageServicePrice');
+    const weeksBetweenVisitsInput = document.getElementById('weeksBetweenVisits');
+    const workDaysPerWeekInput = document.getElementById('workDaysPerWeek');
+
+
+    // Get button and result display elements
+    const calculateBtn = document.getElementById('calculateBtn');
+    const resultDiv = document.getElementById('resultDiv');
+    const dailyClientsDiv = document.getElementById('dailyClientsDiv');
+
+
+
+
+    // Add event listener to the Calculate button
+    calculateBtn.addEventListener('click', () => {
+      // Parse input values as floats
+      const incomeGoal = parseFloat(incomeGoalInput.value);
+      const averageServicePrice = parseFloat(averageServicePriceInput.value);
+      const weeksBetweenVisits = parseFloat(weeksBetweenVisitsInput.value);
+      const workDaysPerWeek = parseFloat(workDaysPerWeekInput.value);
+
+
+      // Call the calculation function
+      const { totalClientsNeeded, totalVisitsNeeded, visitsPerDay, clientsPerDay } = calculateClientsNeeded({
+        incomeGoal,
+        averageServicePrice,
+        weeksBetweenVisits,
+        workDaysPerWeek
+      });
+
+
+      // Display the main results
+      resultDiv.innerHTML = `
+        <h3>Calculation Results:</h3>
+        <p><strong>Total Visits Needed Annually:</strong> ${totalVisitsNeeded}</p>
+        <p><strong>Total Clients Needed (Active Pool):</strong> ${totalClientsNeeded}</p>
+      `;
+
+
+      // Display the daily/weekly breakdown
+      dailyClientsDiv.innerHTML = `
+        <h3>Daily/Weekly Breakdown:</h3>
+        <p><strong>Average Visits Per Day:</strong> ${visitsPerDay}</p>
+        <p><strong>Average Clients/Appointments Per Day:</strong> ${clientsPerDay}</p>
+      `;
+    });
+  </script>
+</body>
+</html>
