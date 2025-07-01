@@ -1,0 +1,222 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dream Income Calculator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+
+
+  <style>
+    body {
+      font-family: 'Montserrat', sans-serif;
+      max-width: 500px;
+      margin: 2rem auto;
+      padding: 1rem;
+      background: #f4f4f4;
+      border-radius: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+
+    label {
+      display: block;
+      margin-top: 1rem;
+      font-weight: 600;
+    }
+
+
+    input, select {
+      width: 100%;
+      padding: 0.5rem;
+      font-size: 1rem;
+      margin-top: 0.2rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+
+    button {
+      margin-top: 1.5rem;
+      padding: 0.75rem;
+      font-size: 1rem;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+
+    .output {
+      margin-top: 2rem;
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+
+    .hidden {
+      display: none;
+    }
+
+
+    .coin {
+      position: absolute;
+      top: -40px;
+      animation: fall linear;
+      pointer-events: none;
+      z-index: 10;
+      font-size: 22px;
+    }
+
+
+    @keyframes fall {
+      to {
+        transform: translateY(600px);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+
+  <h2>Dream Income Calculator</h2>
+
+
+  <label for="incomeGoal">Yearly Income Goal:</label>
+  <input type="number" id="incomeGoal" placeholder="e.g. 100000" />
+
+
+  <label for="averageServicePrice">Average Ticket Cost ($):</label>
+  <input type="number" id="averageServicePrice" placeholder="e.g. 60" />
+
+
+  <label for="visitType">Number of Visits:</label>
+  <select id="visitType" onchange="toggleVisitInput()">
+    <option value="">-- Select Frequency --</option>
+    <option value="weeks">Every X Weeks</option>
+    <option value="monthly">Monthly (12 times/year)</option>
+  </select>
+
+
+  <div id="weeksInputDiv" class="hidden">
+    <label for="weeksBetweenVisits">Weeks Between Visits:</label>
+    <input type="number" id="weeksBetweenVisits" placeholder="e.g. 4" />
+  </div>
+
+
+  <div id="workDaysDiv" class="hidden">
+    <label for="workDaysPerWeek">Work Days per Week:</label>
+    <input type="number" id="workDaysPerWeek" placeholder="e.g. 3" />
+  </div>
+
+
+  <button onclick="runCalculation()">Run the Numbers</button>
+
+
+  <div class="output" id="results"></div>
+
+
+  <script>
+    const emojiCycle = ['💅', '✨', '💸', '🌟', '🧖‍♀️'];
+    let emojiIndex = 0;
+
+
+    function toggleVisitInput() {
+      const visitType = document.getElementById('visitType').value;
+      document.getElementById('weeksInputDiv').classList.toggle('hidden', visitType !== 'weeks');
+      document.getElementById('workDaysDiv').classList.toggle('hidden', visitType === '');
+    }
+
+
+    function runEmojiDrop(emoji) {
+      for (let i = 0; i < 20; i++) {
+        setTimeout(() => {
+          const drop = document.createElement('div');
+          drop.className = 'coin';
+          drop.textContent = emoji;
+          drop.style.left = Math.random() * 100 + '%';
+          drop.style.animationDuration = (Math.random() * 1.2 + 0.8) + 's';
+          document.body.appendChild(drop);
+          setTimeout(() => drop.remove(), 2000);
+        }, i * 60);
+      }
+    }
+
+
+    function runCalculation() {
+      const incomeGoal = parseFloat(document.getElementById('incomeGoal').value);
+      const averageServicePrice = parseFloat(document.getElementById('averageServicePrice').value);
+      const visitType = document.getElementById('visitType').value;
+      const weeksBetweenVisits = parseFloat(document.getElementById('weeksBetweenVisits').value);
+      const workDaysPerWeek = parseFloat(document.getElementById('workDaysPerWeek').value);
+      const workWeeksPerYear = 50;
+
+
+      const resultsDiv = document.getElementById('results');
+
+
+      if (
+        isNaN(incomeGoal) || incomeGoal <= 0 ||
+        isNaN(averageServicePrice) || averageServicePrice <= 0 ||
+        isNaN(workDaysPerWeek) || workDaysPerWeek <= 0 ||
+        (visitType === 'weeks' && (isNaN(weeksBetweenVisits) || weeksBetweenVisits <= 0)) ||
+        visitType === ''
+      ) {
+        resultsDiv.innerHTML = `<p>Please enter valid (positive) numbers in all fields.</p>`;
+        return;
+      }
+
+
+      const totalVisitsNeeded = incomeGoal / averageServicePrice;
+      const totalWorkDays = workDaysPerWeek * workWeeksPerYear;
+      const visitsPerDay = Math.ceil(totalVisitsNeeded / totalWorkDays);
+
+
+      let visitsPerClientPerYear;
+      let frequencyDescription;
+
+
+      if (visitType === 'monthly') {
+        visitsPerClientPerYear = 12;
+        frequencyDescription = 'monthly (12 visits/year)';
+      } else {
+        visitsPerClientPerYear = 52 / weeksBetweenVisits;
+        frequencyDescription = `every ${weeksBetweenVisits} weeks (~${visitsPerClientPerYear.toFixed(1)} visits/year)`;
+      }
+
+
+      const clientsNeeded = totalVisitsNeeded / visitsPerClientPerYear;
+
+
+resultsDiv.innerHTML = `
+  <p>To make your dream income of <strong>$${incomeGoal.toLocaleString()}</strong> per year, here’s the breakdown:</p>
+  <p>✨ You’ll need about <strong>${Math.ceil(clientsNeeded)}</strong> loyal clients (visiting ${frequencyDescription}).</p>
+  <p>💆🏽‍♀️That breaks down to around <strong>${visitsPerDay}</strong> client visits per workday (${workDaysPerWeek} days/week).</p>
+  <p>💅🏼That’s <strong>${Math.ceil(totalVisitsNeeded)}</strong> services total — you got this.</p>
+`;
+
+
+      // Trigger emoji confetti (one emoji per run)
+      runEmojiDrop(emojiCycle[emojiIndex]);
+      emojiIndex = (emojiIndex + 1) % emojiCycle.length;
+    }
+
+
+    toggleVisitInput();
+  </script>
+
+
+</body>
+</html>
